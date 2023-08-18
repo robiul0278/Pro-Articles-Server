@@ -26,9 +26,21 @@ async function run() {
   try {
 
     const articleCollection = client.db("ArticleDB").collection("article");
+    const userCollections = client.db("ArticleDB").collection("users");
 
+    /******** Create user POST API *******/
+    app.post("/users", async (req, res) => {
+      const userDetails = req.body;
+      const query = { email: userDetails.email };
+      const existingUser = await userCollections.findOne(query);
+      if (existingUser) {
+        return res.send({ message: "User Already Exist" });
+      }
+      const result = await userCollections.insertOne(userDetails);
+      res.send(result);
+    })
 
-    // get article
+    /************ Find All article GET API ***************/
     app.get("/article", async (req, res) => {
         const result = await articleCollection.find({}).toArray();
         res.send(result);
@@ -38,6 +50,15 @@ async function run() {
     //     const result = await articleCollection.find({}).toArray();
     //     res.send(result);
     //   });
+
+    /****************** Add article post API ************************/
+    app.post("/addarticle", async (req,res) => {
+      const articleDetails = req.body;
+      console.log(articleDetails);
+      const result = await articleCollection.insertOne(articleDetails);
+      res.send(result);
+    })
+    
 
 
     // Connect the client to the server	(optional starting in v4.7)
