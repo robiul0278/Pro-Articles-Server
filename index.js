@@ -32,7 +32,6 @@ const verifyJWT = (req, res, next) => {
   });
 };
 
-
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@cluster0.djxbtyf.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -50,21 +49,6 @@ async function run() {
     const articleCollection = client.db("ArticleDB").collection("article");
     const usersCollection = client.db("ArticleDB").collection("users");
     const reviewsCollection = client.db("ArticleDB").collection("reviews");
-
-    /*indexing*/
-    // Creating index on two fields
-    const indexKeys = {
-      title: 1,
-      //  subCategory: 1 
-    }; // Replace field1 and field2 with your actual field names
-
-    const indexOptions = { name: "title" }; // Replace index_name with the desired index name
-
-     const result = await articleCollection.createIndex(indexKeys, indexOptions);
-    console.log(result);
-
-
-
 
     /******** Create JWT API *******/
     app.post("/jwt", (req, res) => {
@@ -87,6 +71,30 @@ async function run() {
       }
       next();
     };
+
+    /*indexing*/
+    // Creating index on two fields
+    const indexKeys = { title: 1, category: 1 };
+
+    const indexOptions = { name: "titleCategory" }; // Replace index_name with the desired index name
+
+    const result = await articleCollection.createIndex(indexKeys, indexOptions);
+    console.log(result);
+
+    /**search bar implement**/
+    app.get("/articleSearch/:text", async (req, res) => {
+      const searchText = req.params.text;
+
+      const result = await articleCollection
+        .find({
+          $or: [
+            { title: { $regex: searchText, $options: "i" } },
+            { category: { $regex: searchText, $options: "i" } },
+          ],
+        })
+        .toArray();
+      res.send(result);
+    });
 
     /******** Create users POST API *******/
     app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
@@ -119,7 +127,6 @@ async function run() {
       res.send(result);
     });
 
-
     /************  article  API ***************/
     app.get("/article/:id", async (req, res) => {
       const id = req.params.id;
@@ -134,24 +141,6 @@ async function run() {
       res.send(result);
     });
 
-
-    /**search bar implement**/
-    app.get('/article/:text', async (req, res) => {
-      const searchText = req.params.text;
-
-      const result = await articleCollection.find({
-        $or: [
-          { title: { $regex: searchText, $options: "i" } },
-          // {
-          //   subCategory: { $regex: searchText, $options: "i" }
-          // }
-        ],
-      })
-        .toArray();
-      res.send(result);
-    })
-
-    
     app.post("/addarticle", async (req, res) => {
       const articleDetails = req.body;
       console.log(articleDetails);
