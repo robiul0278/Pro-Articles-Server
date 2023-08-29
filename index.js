@@ -51,6 +51,21 @@ async function run() {
     const usersCollection = client.db("ArticleDB").collection("users");
     const reviewsCollection = client.db("ArticleDB").collection("reviews");
 
+    /*indexing*/
+    // Creating index on two fields
+    const indexKeys = {
+      title: 1,
+      //  subCategory: 1 
+    }; // Replace field1 and field2 with your actual field names
+
+    const indexOptions = { name: "title" }; // Replace index_name with the desired index name
+
+     const result = await articleCollection.createIndex(indexKeys, indexOptions);
+    console.log(result);
+
+
+
+
     /******** Create JWT API *******/
     app.post("/jwt", (req, res) => {
       const user = req.body;
@@ -108,6 +123,7 @@ async function run() {
     /************  article  API ***************/
     app.get("/article/:id", async (req, res) => {
       const id = req.params.id;
+      console.log(id);
       const query = { _id: new ObjectId(id) };
       const data = await articleCollection.findOne(query);
       res.send(data);
@@ -118,6 +134,24 @@ async function run() {
       res.send(result);
     });
 
+
+    /**search bar implement**/
+    app.get('/article/:text', async (req, res) => {
+      const searchText = req.params.text;
+
+      const result = await articleCollection.find({
+        $or: [
+          { title: { $regex: searchText, $options: "i" } },
+          // {
+          //   subCategory: { $regex: searchText, $options: "i" }
+          // }
+        ],
+      })
+        .toArray();
+      res.send(result);
+    })
+
+    
     app.post("/addarticle", async (req, res) => {
       const articleDetails = req.body;
       console.log(articleDetails);
