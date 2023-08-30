@@ -1,14 +1,18 @@
 const express = require("express");
 const app = express();
-const cors = require("cors");
 require("dotenv").config();
 var jwt = require("jsonwebtoken");
-
+const cors = require("cors");
 const port = process.env.PORT || 5000;
 
 // middleware
 app.use(cors());
 app.use(express.json());
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  next();
+});
 
 const verifyJWT = (req, res, next) => {
   const authorization = req.headers.authorization;
@@ -50,7 +54,17 @@ async function run() {
     const usersCollection = client.db("ArticleDB").collection("users");
     const reviewsCollection = client.db("ArticleDB").collection("reviews");
 
-    /******** Create JWT API *******/
+    /*indexing create only*/
+    // Creating index on two fields
+    // const indexKeys = { title: 1, category: 1 };
+
+    // const indexOptions = { name: "titleCategory" }; // Replace index_name with the desired index name
+
+    // const result = await articleCollection.createIndex(indexKeys, indexOptions);
+    // console.log(result);
+
+    // ============= Create JWT API =============
+
     app.post("/jwt", (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
@@ -63,8 +77,8 @@ async function run() {
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
       const query = { email: email };
-      const user = await usersCollection.findOne(query);
-      if (user?.role !== "admin") {
+      const users = await usersCollection.findOne(query);
+      if (users?.role !== "admin") {
         return res
           .status(403)
           .send({ error: true, message: "forbidden message" });
@@ -72,32 +86,9 @@ async function run() {
       next();
     };
 
-    /*indexing*/
-    // Creating index on two fields
-    const indexKeys = { title: 1, category: 1 };
+    // ============= USERS =============
 
-    const indexOptions = { name: "titleCategory" }; // Replace index_name with the desired index name
-
-    const result = await articleCollection.createIndex(indexKeys, indexOptions);
-    console.log(result);
-
-    /**search bar implement**/
-    app.get("/articleSearch/:text", async (req, res) => {
-      const searchText = req.params.text;
-
-      const result = await articleCollection
-        .find({
-          $or: [
-            { title: { $regex: searchText, $options: "i" } },
-            { category: { $regex: searchText, $options: "i" } },
-          ],
-        })
-        .toArray();
-      res.send(result);
-    });
-
-    /******** Create users POST API *******/
-    app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
+    app.get("/users", async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
@@ -110,6 +101,32 @@ async function run() {
         return res.send({ message: "User Already Exist" });
       }
       const result = await usersCollection.insertOne(userDetails);
+      res.send(result);
+    });
+
+    // MAKE ADMIN
+    app.patch("/users/admin/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: "admin",
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    // REMOVE ADMIN
+    app.patch("/users/removeAdmin/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: "user",
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
 
@@ -127,24 +144,51 @@ async function run() {
       res.send(result);
     });
 
-    /************  article  API ***************/
+    // ============= ARTICLE API =============
+
+    app.get("/article", async (req, res) => {
+      const result = await articleCollection.find({}).toArray(); // All data
+      res.send(result);
+    });
+
     app.get("/article/:id", async (req, res) => {
       const id = req.params.id;
       console.log(id);
       const query = { _id: new ObjectId(id) };
-      const data = await articleCollection.findOne(query);
+      const data = await articleCollection.findOne(query); // Single data
       res.send(data);
     });
 
-    app.get("/article", async (req, res) => {
-      const result = await articleCollection.find({}).toArray();
+    app.post("/addArticle", async (req, res) => {
+      const articleDetails = req.body;
+      console.log(articleDetails);
+      const result = await articleCollection.insertOne(articleDetails); // Post data
       res.send(result);
     });
 
-    app.post("/addarticle", async (req, res) => {
-      const articleDetails = req.body;
-      console.log(articleDetails);
-      const result = await articleCollection.insertOne(articleDetails);
+    // get, user updated some data
+    app.get("/userArticle", async (req, res) => {
+      let query = {};
+      console.log(req.query.email);
+      if (req.query?.email) {
+        query = { email: req.query.email };
+      }
+      const result = await articleCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    /**search bar implement**/
+    app.get("/articleSearch/:text", async (req, res) => {
+      const searchText = req.params.text;
+
+      const result = await articleCollection
+        .find({
+          $or: [
+            { title: { $regex: searchText, $options: "i" } },
+            { category: { $regex: searchText, $options: "i" } }, //Search data
+          ],
+        })
+        .toArray();
       res.send(result);
     });
 
