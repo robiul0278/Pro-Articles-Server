@@ -70,7 +70,6 @@ async function run() {
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: "1h",
       });
-
       res.send({ token });
     });
     // Warning: use verifyJWT before using verifyAdmin
@@ -88,7 +87,7 @@ async function run() {
 
     // ============= USERS =============
 
-    app.get("/users", async (req, res) => {
+    app.get("/users",verifyJWT,verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
@@ -131,7 +130,7 @@ async function run() {
     });
 
     // check admin
-    app.get("/users/admin/:email", verifyJWT, async (req, res) => {
+    app.get("/users/admin/:email", async (req, res) => {
       const email = req.params.email;
 
       if (req.decoded.email !== email) {
@@ -159,25 +158,45 @@ async function run() {
       res.send(data);
     });
 
-    app.post("/addArticle", async (req, res) => {
+    app.post("/addArticle",verifyJWT, async (req, res) => {
       const articleDetails = req.body;
       console.log(articleDetails);
       const result = await articleCollection.insertOne(articleDetails); // Post data
       res.send(result);
     });
 
-    // get, user updated some data
-    app.get("/userArticle", async (req, res) => {
+    app.get("/userArticle",verifyJWT, async (req, res) => {
       let query = {};
       console.log(req.query.email);
       if (req.query?.email) {
         query = { email: req.query.email };
       }
-      const result = await articleCollection.find(query).toArray();
+      const result = await articleCollection.find(query).toArray();  // get, user updated some data
       res.send(result);
     });
 
-    /**search bar implement**/
+       app.patch("/article/approved/:id",verifyJWT, async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            status: "approved",
+          },
+        };
+        const result = await articleCollection.updateOne(filter, updateDoc); // Article approved
+        res.send(result);
+      });
+
+
+          
+    app.delete("/deleteArticle/:id",verifyJWT, async (req, res) => {
+      const id = req.params.id;
+
+      const query = { _id: new ObjectId(id) };
+      const result = await articleCollection.deleteOne(query); // delete single data
+      res.send(result);
+    });
+    
     app.get("/articleSearch/:text", async (req, res) => {
       const searchText = req.params.text;
 
