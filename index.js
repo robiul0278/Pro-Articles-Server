@@ -53,6 +53,7 @@ async function run() {
     const articleCollection = client.db("ArticleDB").collection("article");
     const usersCollection = client.db("ArticleDB").collection("users");
     const reviewsCollection = client.db("ArticleDB").collection("reviews");
+    const bookArticleCollection = client.db("ArticleDB").collection("BookArticle");
 
     /*indexing create only*/
     // Creating index on two fields
@@ -144,6 +145,8 @@ async function run() {
       res.send(result);
     });
 
+
+
     // ============= ARTICLE API =============
 
     app.get("/article", async (req, res) => {
@@ -159,6 +162,46 @@ async function run() {
       res.send(data);
     });
 
+    // ********** bookarticle ********************
+
+    // app.post("/bookarticle", async (req, res) => {
+    //   const book = req.body;
+    //   console.log(book);
+    //   const result = await bookArticleCollection.insertOne(book); // Post data
+    //   res.send(result);
+    // })
+    // app.post("/bookarticle", async (req, res) => {
+    //   const book = req.body;
+    //   console.log(book);
+    //   try {
+    //     const result = await bookArticleCollection.insertOne(book); // Insert the received book data
+    //     res.send(result);
+    //   } catch (error) {
+    //     console.error("Error inserting book article:", error);
+    //     res.status(500).send("Internal Server Error");
+    //   }
+    // })
+
+    app.post("/bookarticle", async (req, res) => {
+      const book = req.body;
+      console.log(book);
+      const result = await bookArticleCollection.insertOne(book); // Post data
+      res.send(result);
+    })
+
+    app.get("/bookarticle", async (req, res) =>{
+      let query = {};
+      console.log(req.query.email);
+      if (req.query?.email) {
+        query = { email: req.query.email };
+      }
+      const result = await bookArticleCollection.find(query).toArray();
+      console.log(result);
+      res.send(result);
+    })
+
+
+    // *****************Add article
     app.post("/addArticle", async (req, res) => {
       const articleDetails = req.body;
       console.log(articleDetails);
