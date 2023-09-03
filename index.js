@@ -199,16 +199,27 @@ async function run() {
       res.send(result);
     })
 
-    app.get("/bookarticle", async (req, res) =>{
-      let query = {};
-      console.log(req.query.email);
-      if (req.query?.email) {
-        query = { email: req.query.email };
-      }
+    app.get("/bookarticle/:email", async (req, res) =>{
+      const email = req.params.email
+      console.log(email);
+      const query = {userEmail: email}
+      // if (req.query?.email) {
+      //   query = { email: req.query.email };
+      // }
       const result = await bookArticleCollection.find(query).toArray();
       console.log(result);
       res.send(result);
     })
+    // app.get("/bookarticle", async (req, res) =>{
+    //   let query = {};
+    //   console.log(req.query.email);
+    //   if (req.query?.email) {
+    //     query = { email: req.query.email };
+    //   }
+    //   const result = await bookArticleCollection.find(query).toArray();
+    //   console.log(result);
+    //   res.send(result);
+    // })
 
 
     // *****************Add article
