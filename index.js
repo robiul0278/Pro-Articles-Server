@@ -1,6 +1,6 @@
-const express = require("express");
-const app = express();
-require("dotenv").config();
+const express = require("express")
+const app = express()
+require("dotenv").config()
 var jwt = require("jsonwebtoken");
 const cors = require("cors");
 const port = process.env.PORT || 5000;
@@ -54,6 +54,7 @@ async function run() {
     const usersCollection = client.db("ArticleDB").collection("users");
     const reviewsCollection = client.db("ArticleDB").collection("reviews");
     const bookArticleCollection = client.db("ArticleDB").collection("BookArticle");
+    const addCommentCollection = client.db("ArticleDB").collection("addComment");
 
     /*indexing create only*/
     // Creating index on two fields
@@ -88,7 +89,7 @@ async function run() {
 
     // ============= USERS =============
 
-    app.get("/users",verifyJWT, verifyAdmin, async (req, res) => {
+    app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
@@ -131,7 +132,7 @@ async function run() {
     });
 
     // check admin
-    app.get("/users/admin/:email",verifyJWT, async (req, res) => {
+    app.get("/users/admin/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
 
       if (req.decoded.email !== email) {
@@ -150,12 +151,12 @@ async function run() {
       // console.log(email);
       const query = { email: email }
       const options = {
-          projection: { role: 1 },
+        projection: { role: 1 },
       };
       const result = await usersCollection.findOne(query, options);
       res.send(result);
 
-  })
+    })
 
     // ============= ARTICLE API =============
 
@@ -199,10 +200,10 @@ async function run() {
       res.send(result);
     })
 
-    app.get("/bookarticle/:email", async (req, res) =>{
+    app.get("/bookarticle/:email", async (req, res) => {
       const email = req.params.email
       console.log(email);
-      const query = {userEmail: email}
+      const query = { userEmail: email }
       // if (req.query?.email) {
       //   query = { email: req.query.email };
       // }
@@ -223,8 +224,8 @@ async function run() {
 
 
     // *****************Add article
-    
-    app.post("/addArticle",verifyJWT, async (req, res) => {
+
+    app.post("/addArticle", verifyJWT, async (req, res) => {
       const articleDetails = req.body;
       console.log(articleDetails);
       const result = await articleCollection.insertOne(articleDetails); // Post data
@@ -241,20 +242,20 @@ async function run() {
       res.send(result);
     });
 
-       app.patch("/article/approved/:id", async (req, res) => {
-        const id = req.params.id;
-        const filter = { _id: new ObjectId(id) };
-        const updateDoc = {
-          $set: {
-            status: "approved",
-          },
-        };
-        const result = await articleCollection.updateOne(filter, updateDoc); // Article approved
-        res.send(result);
-      });
+    app.patch("/article/approved/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: "approved",
+        },
+      };
+      const result = await articleCollection.updateOne(filter, updateDoc); // Article approved
+      res.send(result);
+    });
 
 
-          
+
     app.delete("/deleteArticle/:id", async (req, res) => {
       const id = req.params.id;
 
@@ -262,7 +263,7 @@ async function run() {
       const result = await articleCollection.deleteOne(query); // delete single data
       res.send(result);
     });
-    
+
     app.get("/articleSearch/:text", async (req, res) => {
       const searchText = req.params.text;
 
@@ -291,6 +292,20 @@ async function run() {
     });
 
     // Comment part
+
+    app.post("/addComment", async (req, res) => {
+      const commentDetails = req.body;
+      const result = await addCommentCollection.insertOne(commentDetails);
+      res.send(result);
+    });
+
+    app.get("/addComment", async (req, res) => {
+      const result = await addCommentCollection.find().toArray();
+      res.send(result);
+    });
+
+
+
 
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
