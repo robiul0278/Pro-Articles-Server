@@ -211,17 +211,7 @@ async function run() {
       console.log(result);
       res.send(result);
     })
-    // app.get("/bookarticle", async (req, res) =>{
-    //   let query = {};
-    //   console.log(req.query.email);
-    //   if (req.query?.email) {
-    //     query = { email: req.query.email };
-    //   }
-    //   const result = await bookArticleCollection.find(query).toArray();
-    //   console.log(result);
-    //   res.send(result);
-    // })
-
+   
     app.delete("/bookarticle/:id", async (req, res) => {
       const id = req.params.id;
 
