@@ -220,6 +220,14 @@ async function run() {
       res.send(result);
     });
 
+    app.delete("/bookarticle/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const query = { _id: new ObjectId(id) };
+      const result = await bookArticleCollection.deleteOne(query); // delete single data
+      res.send(result);
+    });
+
 
     // *****************Add article
 
@@ -252,7 +260,7 @@ async function run() {
       res.send(result);
     });
 
-
+    //  add some text
 
     app.delete("/deleteArticle/:id", async (req, res) => {
       const id = req.params.id;
@@ -291,6 +299,7 @@ async function run() {
 
     // Comment part
 
+<<<<<<< HEAD
     app.patch("/addComment", async (req, res) => {
       try {
         const commentDetails = req.body.comment;
@@ -333,6 +342,13 @@ async function run() {
         console.error(error);
         res.status(500).json({ success: false, message: "Internal server error" });
       }
+=======
+    app.post("/addComment", async (req, res) => {
+      const commentDetails = req.body;
+      const result = await addCommentCollection.insertOne(commentDetails);
+      console.log(result);
+      res.send(result);
+>>>>>>> d99a92f1e6a20eb2ccd9b6b8d4590603b6bb2cc7
     });
 
     app.get("/addComment", async (req, res) => {
@@ -351,6 +367,8 @@ async function run() {
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
   } finally {
+    // Ensures that the client will close when you finish/error
+    // await client.close();
     // Ensures that the client will close when you finish/error
     // await client.close();
   }
