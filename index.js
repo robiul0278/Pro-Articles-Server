@@ -299,7 +299,6 @@ async function run() {
 
     // Comment part
 
-<<<<<<< HEAD
     app.patch("/addComment", async (req, res) => {
       try {
         const commentDetails = req.body.comment;
@@ -342,13 +341,6 @@ async function run() {
         console.error(error);
         res.status(500).json({ success: false, message: "Internal server error" });
       }
-=======
-    app.post("/addComment", async (req, res) => {
-      const commentDetails = req.body;
-      const result = await addCommentCollection.insertOne(commentDetails);
-      console.log(result);
-      res.send(result);
->>>>>>> d99a92f1e6a20eb2ccd9b6b8d4590603b6bb2cc7
     });
 
     app.get("/addComment", async (req, res) => {
