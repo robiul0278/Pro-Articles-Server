@@ -222,6 +222,14 @@ async function run() {
     //   res.send(result);
     // })
 
+    app.delete("/bookarticle/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const query = { _id: new ObjectId(id) };
+      const result = await  bookArticleCollection.deleteOne(query); // delete single data
+      res.send(result);
+    });
+
 
     // *****************Add article
 
@@ -293,30 +301,6 @@ async function run() {
 
     // Comment part
 
-    // app.patch("/addComment/:id", async (req, res) => {
-    //   const commentDetails = req.body;
-    //   const id = res.query;
-    //   console.log(id)
-    //   return
-    //   let updateDoc = {
-    //     $set: {
-    //       status: "active",
-    //     },
-    //   };
-    //   const newComment = { comment: commentDetails }
-    //   if (!Array.isArray(existingArticle.comments)) {
-    //     existingArticle.comments = [];
-    //   }
-
-    //   existingArticle.comments.push(newComment);
-
-    //   updateDoc.$set.comments = existingArticle.comments;
-
-    //   const query = { _id: existingArticle._id };
-    //   const result = await articleCollection.updateOne(query, updateDoc);
-    //   // const result = await addCommentCollection.insertOne(commentDetails);
-    //   res.send(result);
-    // });
     app.patch("/addComment", async (req, res) => {
       try {
         const commentDetails = req.body.comment;
