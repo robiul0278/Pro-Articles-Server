@@ -211,22 +211,20 @@ async function run() {
       console.log(result);
       res.send(result);
     })
-    // app.get("/bookarticle", async (req, res) =>{
-    //   let query = {};
-    //   console.log(req.query.email);
-    //   if (req.query?.email) {
-    //     query = { email: req.query.email };
-    //   }
-    //   const result = await bookArticleCollection.find(query).toArray();
-    //   console.log(result);
-    //   res.send(result);
-    // })
 
     app.delete("/bookarticle/:id", async (req, res) => {
       const id = req.params.id;
 
       const query = { _id: new ObjectId(id) };
-      const result = await  bookArticleCollection.deleteOne(query); // delete single data
+      const result = await bookArticleCollection.deleteOne(query); // delete single data
+      res.send(result);
+    });
+
+    app.delete("/bookarticle/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const query = { _id: new ObjectId(id) };
+      const result = await bookArticleCollection.deleteOne(query); // delete single data
       res.send(result);
     });
 
@@ -261,8 +259,6 @@ async function run() {
       const result = await articleCollection.updateOne(filter, updateDoc); // Article approved
       res.send(result);
     });
-
-
 
     app.delete("/deleteArticle/:id", async (req, res) => {
       const id = req.params.id;
@@ -301,11 +297,48 @@ async function run() {
 
     // Comment part
 
-    app.post("/addComment", async (req, res) => {
-      const commentDetails = req.body;
-      const result = await addCommentCollection.insertOne(commentDetails);
-      console.log(result);
-      res.send(result);
+    app.patch("/addComment", async (req, res) => {
+      try {
+        const commentDetails = req.body.comment;
+        const id = req.query.id;
+        console.log(commentDetails);
+
+        if (!commentDetails || !id) {
+          return res.status(400).json({ success: false, message: "Invalid request parameters" });
+        }
+
+        const existingArticle = await articleCollection.findOne({ _id: new ObjectId(id) });
+
+        if (!existingArticle) {
+          return res.status(404).json({ success: false, message: "Article not found" });
+        }
+
+        const newComment = { comment: commentDetails };
+
+        if (!Array.isArray(existingArticle.comments)) {
+          existingArticle.comments = [];
+        }
+
+        existingArticle.comments.push(newComment);
+
+        const updateDoc = {
+          $set: {
+            comments: existingArticle.comments,
+          },
+        };
+
+        const query = { _id: existingArticle._id };
+        const result = await articleCollection.updateOne(query, updateDoc);
+
+        if (result.modifiedCount === 1) {
+          res.status(200).json({ success: true, message: "Comment added successfully" });
+        } else {
+          res.status(500).json({ success: false, message: "Failed to add comment" });
+        }
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+      }
     });
 
     app.get("/addComment", async (req, res) => {
@@ -314,7 +347,7 @@ async function run() {
     });
 
 
-
+    // add some
 
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
