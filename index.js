@@ -301,56 +301,11 @@ async function run() {
 
     // Comment part
 
-   
-    app.patch("/addComment", async (req, res) => {
-      try {
-        const commentDetails = req.body.comment;
-        const id = req.query.id;
-        console.log(commentDetails);
-
-        if (!commentDetails || !id) {
-          return res.status(400).json({ success: false, message: "Invalid request parameters" });
-        }
-
-        const existingArticle = await articleCollection.findOne({ _id: new ObjectId(id) });
-
-        if (!existingArticle) {
-          return res.status(404).json({ success: false, message: "Article not found" });
-        }
-
-        const newComment = { comment: commentDetails };
-
-        if (!Array.isArray(existingArticle.comments)) {
-          existingArticle.comments = [];
-        }
-
-        existingArticle.comments.push(newComment);
-
-        const updateDoc = {
-          $set: {
-            comments: existingArticle.comments,
-          },
-        };
-
-        const query = { _id: existingArticle._id };
-        const result = await articleCollection.updateOne(query, updateDoc);
-
-        if (result.modifiedCount === 1) {
-          res.status(200).json({ success: true, message: "Comment added successfully" });
-        } else {
-          res.status(500).json({ success: false, message: "Failed to add comment" });
-        }
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: "Internal server error" });
-      }
-
     app.post("/addComment", async (req, res) => {
       const commentDetails = req.body;
       const result = await addCommentCollection.insertOne(commentDetails);
       console.log(result);
       res.send(result);
-
     });
 
     app.get("/addComment", async (req, res) => {
