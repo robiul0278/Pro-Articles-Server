@@ -222,6 +222,14 @@ async function run() {
     //   res.send(result);
     // })
 
+    app.delete("/bookarticle/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const query = { _id: new ObjectId(id) };
+      const result = await  bookArticleCollection.deleteOne(query); // delete single data
+      res.send(result);
+    });
+
 
     // *****************Add article
 
@@ -296,6 +304,7 @@ async function run() {
     app.post("/addComment", async (req, res) => {
       const commentDetails = req.body;
       const result = await addCommentCollection.insertOne(commentDetails);
+      console.log(result);
       res.send(result);
     });
 
