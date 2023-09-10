@@ -260,8 +260,6 @@ async function run() {
       res.send(result);
     });
 
-    //  add some text
-
     app.delete("/deleteArticle/:id", async (req, res) => {
       const id = req.params.id;
 
@@ -349,7 +347,7 @@ async function run() {
     });
 
 
-
+    // add some
 
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
