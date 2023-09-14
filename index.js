@@ -1,9 +1,9 @@
-const express = require("express")
-const app = express()
-require("dotenv").config()
+const express = require("express");
+const app = express();
+require("dotenv").config();
 var jwt = require("jsonwebtoken");
 const cors = require("cors");
-const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 // const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
 const port = process.env.PORT || 5000;
 
@@ -30,9 +30,7 @@ const verifyJWT = (req, res, next) => {
 
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
     if (err) {
-      return res
-        .status(403)
-        .send({ error: true, message: "No access !!!!!!" });
+      return res.status(403).send({ error: true, message: "No access !!!!!!" });
     }
     req.decoded = decoded;
     next();
@@ -56,9 +54,13 @@ async function run() {
     const articleCollection = client.db("ArticleDB").collection("article");
     const usersCollection = client.db("ArticleDB").collection("users");
     const reviewsCollection = client.db("ArticleDB").collection("reviews");
-    const bookArticleCollection = client.db("ArticleDB").collection("BookArticle");
-    const addCommentCollection = client.db("ArticleDB").collection("addComment");
-    const paymentCollection = client.db("bistroDb").collection("payments");
+    const bookArticleCollection = client
+      .db("ArticleDB")
+      .collection("BookArticle");
+    const addCommentCollection = client
+      .db("ArticleDB")
+      .collection("addComment");
+    const paymentCollection = client.db("ArticleDB").collection("payments");
 
     /*indexing create only*/
     // Creating index on two fields
@@ -149,18 +151,16 @@ async function run() {
       res.send(result);
     });
 
-
-    app.get('/role/:email', async (req, res) => {
+    app.get("/role/:email", async (req, res) => {
       const email = req.params.email;
       // console.log(email);
-      const query = { email: email }
+      const query = { email: email };
       const options = {
         projection: { role: 1 },
       };
       const result = await usersCollection.findOne(query, options);
       res.send(result);
-
-    })
+    });
 
     // ============= ARTICLE API =============
 
@@ -202,19 +202,19 @@ async function run() {
       console.log(book);
       const result = await bookArticleCollection.insertOne(book); // Post data
       res.send(result);
-    })
+    });
 
     app.get("/bookarticle/:email", async (req, res) => {
-      const email = req.params.email
+      const email = req.params.email;
       console.log(email);
-      const query = { userEmail: email }
+      const query = { userEmail: email };
       // if (req.query?.email) {
       //   query = { email: req.query.email };
       // }
       const result = await bookArticleCollection.find(query).toArray();
       console.log(result);
       res.send(result);
-    })
+    });
 
     app.delete("/bookarticle/:id", async (req, res) => {
       const id = req.params.id;
@@ -234,47 +234,45 @@ async function run() {
 
     // *****Payment********
 
-    app.post('/create-payment-intent', async (req, res) => {
-      const { price } = req.body;
-      const amount = parseInt(price * 100);
+    app.get("/payments", async (req, res) => {
+      const email = req.query.email;
+      if (!email) {
+        res.send([]);
+      }
+      const query = { email: email };
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
+    });
 
-      const paymentIntent = await stripe.paymentIntent.create({
-        amount: amount,
-        currency: 'usd',
-        payment_method_types: ['card']
-      });
+    // create payment intent
+    app.post("/create-payment-intent", async (req, res) => {
+      try {
+        const { price } = req.body;
+        const amount = parseInt(price * 100);
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amount,
+          currency: "usd",
+          payment_method_types: ["card"],
+        });
+        // console.log(paymentIntent)
 
-      res.send({
-        clientSecret: paymentIntent.client_secret
-      })
-    })
+        res.send({
+          clientSecret: paymentIntent.client_secret,
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    });
 
-    app.post('/payments', verifyJWT, async (req, res) => {
+    app.post("/payments", async (req, res) => {
       const payment = req.body;
       const insertResult = await paymentCollection.insertOne(payment);
-
+      console.log(insertResult);
       // const query = { _id: { $in: payment.cartItems.map(id => new ObjectId(id)) } }
       // const deleteResult = await cartCollection.deleteMany(query)
 
       res.send(insertResult);
-    })
-
-    // app.post('/create-payment-intent', verifyJWT, async (req, res) => {
-    //   const { price } = req.body;
-    //   const amount = parseInt(price * 100);
-
-    //   const paymentIntent = await stripe.paymentIntents.create({
-    //     amount: amount,
-    //     currency: 'usd',
-    //     payment_method_types: ['card']
-    //   });
-
-    //   res.send({
-    //     clientSecret: paymentIntent.client_secret
-    //   })
-    // })
-
-
+    });
 
     // *****************Add article
 
@@ -291,7 +289,7 @@ async function run() {
       if (req.query?.email) {
         query = { email: req.query.email };
       }
-      const result = await articleCollection.find(query).toArray();  // get, user updated some data
+      const result = await articleCollection.find(query).toArray(); // get, user updated some data
       res.send(result);
     });
 
@@ -351,13 +349,19 @@ async function run() {
         console.log(commentDetails);
 
         if (!commentDetails || !id) {
-          return res.status(400).json({ success: false, message: "Invalid request parameters" });
+          return res
+            .status(400)
+            .json({ success: false, message: "Invalid request parameters" });
         }
 
-        const existingArticle = await articleCollection.findOne({ _id: new ObjectId(id) });
+        const existingArticle = await articleCollection.findOne({
+          _id: new ObjectId(id),
+        });
 
         if (!existingArticle) {
-          return res.status(404).json({ success: false, message: "Article not found" });
+          return res
+            .status(404)
+            .json({ success: false, message: "Article not found" });
         }
 
         const newComment = { comment: commentDetails };
@@ -378,13 +382,19 @@ async function run() {
         const result = await articleCollection.updateOne(query, updateDoc);
 
         if (result.modifiedCount === 1) {
-          res.status(200).json({ success: true, message: "Comment added successfully" });
+          res
+            .status(200)
+            .json({ success: true, message: "Comment added successfully" });
         } else {
-          res.status(500).json({ success: false, message: "Failed to add comment" });
+          res
+            .status(500)
+            .json({ success: false, message: "Failed to add comment" });
         }
       } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: "Internal server error" });
+        res
+          .status(500)
+          .json({ success: false, message: "Internal server error" });
       }
     });
 
@@ -392,7 +402,6 @@ async function run() {
       const result = await addCommentCollection.find().toArray();
       res.send(result);
     });
-
 
     // add some
 
