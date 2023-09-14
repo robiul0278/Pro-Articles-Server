@@ -1,7 +1,4 @@
-# .vercel
-# node_modules
-# .env
-# vercel.json
+
 .vercel
 node_modules
 .env
