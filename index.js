@@ -231,7 +231,7 @@ async function run() {
 
     // *****************Add article
 
-    app.post("/addArticle", verifyJWT, async (req, res) => {
+    app.post("/addArticle", async (req, res) => {
       const articleDetails = req.body;
       console.log(articleDetails);
       const result = await articleCollection.insertOne(articleDetails); // Post data
