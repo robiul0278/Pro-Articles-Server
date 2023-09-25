@@ -179,24 +179,6 @@ async function run() {
 
     // ********** bookarticle ********************
 
-    // app.post("/bookarticle", async (req, res) => {
-    //   const book = req.body;
-    //   console.log(book);
-    //   const result = await bookArticleCollection.insertOne(book); // Post data
-    //   res.send(result);
-    // })
-    // app.post("/bookarticle", async (req, res) => {
-    //   const book = req.body;
-    //   console.log(book);
-    //   try {
-    //     const result = await bookArticleCollection.insertOne(book); // Insert the received book data
-    //     res.send(result);
-    //   } catch (error) {
-    //     console.error("Error inserting book article:", error);
-    //     res.status(500).send("Internal Server Error");
-    //   }
-    // })
-    
 
     app.post("/bookarticle", async (req, res) => {
       const book = req.body;
@@ -275,7 +257,7 @@ async function run() {
       res.send(insertResult);
     });
 
-    // *****************Add article
+    //Add article ==================
 
     app.post("/addArticle", async (req, res) => {
       const articleDetails = req.body;
@@ -283,6 +265,27 @@ async function run() {
       const result = await articleCollection.insertOne(articleDetails); // Post data
       res.send(result);
     });
+
+        // update Article
+        app.put("/updateArticle/:id", async (req, res) => {
+          const id = req.params.id;
+          const filter = { _id: new ObjectId(id) };
+          const option = { upsert: true };
+          const updateArt = req.body;
+          console.log(updateArt)
+    
+          const article = {
+            $set: {
+              title: updateArt.title,
+              date: updateArt.date,
+              readTime: updateArt.readTime,
+              category: updateArt.category,
+              description: updateArt.description
+            }
+          }
+          const result = await articleCollection.updateOne(filter, article, option);
+          res.send(result);
+        });
 
     app.get("/userArticle", async (req, res) => {
       let query = {};
@@ -345,7 +348,8 @@ async function run() {
 
     app.patch("/addComment", async (req, res) => {
       try {
-        const commentDetails = req.body.comment;
+        const commentDetails = req.body;
+        // const commentDetails = req.body.comment;
         const id = req.query.id;
         console.log(commentDetails);
 
